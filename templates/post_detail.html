@@ -1,0 +1,15 @@
+
+{% load staticfiles %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>blah</title>
+    <link rel="stylesheet" href="{% static "styles/github.css" %}">
+    <script src="{% static "highlight.pack.js" %}"></script>
+    <script>hljs.initHighlightingOnLoad();</script>
+</head>
+<body>
+    <h1>{{ post.title }}</h1>
+    <p>{{ post.content | safe }}</p>
+</body>
+</html>
