@@ -7,10 +7,14 @@ from tinymce import models as tinymce_models
 # TODO: Add tags views upvotes downvotes stars author edited by
 
 class Tag(models.Model):
-    tag_name = models.CharField(max_length=50)
+    tag_name = models.CharField(max_length=50, unique=True)
 
     def __str__(self):
         return self.tag_name
+
+    def get_absolute_url(self):
+        return reverse('tag-archive', args=[self.tag_name])
+
 
 class Post(models.Model):
     title = models.CharField(max_length=250)

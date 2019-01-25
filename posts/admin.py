@@ -2,7 +2,7 @@ from django.contrib import admin
 
 # Register your models here.
 
-from .models import Post
+from .models import Post, Tag
 
 # class PostAdmin(admin.ModelAdmin):
     # list_display = ('title', 'create_time', 'update_time')
@@ -10,3 +10,4 @@ from .models import Post
     # prepopulated_fields = {"slug": ("title",)}
 
 admin.site.register(Post)
+admin.site.register(Tag)

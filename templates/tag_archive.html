@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Tag Archives</title>
+</head>
+<body>
+    <h1>{{ tag }} Archives</h1>
+    {% for post in post_list %}
+
+    <p>{{ post.create_time }}</p>
+    <h2><a href='{{ post.get_absolute_url }}'>{{ post.title }}</a><br/></h2>
+
+    <h3>{{ post.subtitle }}</h3>
+
+    {% endfor %}
+</body>
+</html>

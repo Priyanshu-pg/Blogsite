@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import Post
+from .models import Post, Tag
 from datetime import datetime
 # Create your views here.
 
@@ -20,6 +20,11 @@ def month_archive(request, year, month):
     print(monthName)
     post_list = Post.objects.filter(create_time__year=year, create_time__month=month)
     return render(request, "month_archive.html", {"post_list": post_list, "month": month})
+
+def tag_archive(request, tag):
+    # TODO: Check if this tag exists or not
+    post_list = Post.objects.filter(tags__tag_name=tag)
+    return render(request, "tag_archive.html", {"post_list": post_list, "tag": tag})
 
 def post_detail(request, year, month, slug):
     post = Post.objects.get(slug=slug)
