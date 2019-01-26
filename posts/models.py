@@ -6,7 +6,7 @@ from django.core.validators import RegexValidator
 # Create your models here.
 
 # TODO: Add tags views upvotes downvotes stars author edited by
-
+# TODO: Add suggestion for clubbing similar tags
 class CaseInsensitiveFieldMixin:
     LOOKUP_CONVERSIONS = {
         'exact': 'iexact',
