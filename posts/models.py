@@ -2,12 +2,23 @@ from django.db import models
 from django.urls import reverse
 from django.template.defaultfilters import slugify
 from tinymce import models as tinymce_models
+from django.core.validators import RegexValidator
 # Create your models here.
 
 # TODO: Add tags views upvotes downvotes stars author edited by
 
 class Tag(models.Model):
-    tag_name = models.CharField(max_length=50, unique=True)
+    tag_name = models.CharField(
+        max_length=50,
+        unique=True,
+        validators=[
+            RegexValidator(
+                regex=r'^[0-9a-zA-Z ]+$',
+                message='Can contain only alphabets, numerals or -',
+                code='invalid_tagname'
+            ),
+        ]
+    )
 
     def __str__(self):
         return self.tag_name
