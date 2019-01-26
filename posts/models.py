@@ -7,8 +7,24 @@ from django.core.validators import RegexValidator
 
 # TODO: Add tags views upvotes downvotes stars author edited by
 
+class CaseInsensitiveFieldMixin:
+    LOOKUP_CONVERSIONS = {
+        'exact': 'iexact',
+        'contains': 'icontains',
+        'startswith': 'istartswith',
+        'endswith': 'iendswith',
+        'regex': 'iregex',
+    }
+
+    def get_lookup(self, lookup_name):
+        converted = self.LOOKUP_CONVERSIONS.get(lookup_name, lookup_name)
+        return super().get_lookup(converted)
+
+class CICharField(CaseInsensitiveFieldMixin, models.CharField):
+    pass
+
 class Tag(models.Model):
-    tag_name = models.CharField(
+    tag_name = CICharField(
         max_length=50,
         unique=True,
         validators=[
