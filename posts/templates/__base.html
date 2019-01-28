@@ -1,0 +1,31 @@
+{% load staticfiles i18n %}
+<!--TODO: Template inheritance and refactoring-->
+
+<html>
+    <head>
+        {% block meta_tags %}{% endblock %}
+        <title>
+            {% block title %}{% trans "Django Gazette" %}{% endblock %}
+        </title>
+        {% block stylesheets %}
+            <!--<link rel="stylesheet" href="{% static "gazette/bootstrap/css/bootstrap.min.css" %}" type="text/css" />-->
+            <!--<link rel="stylesheet" href="{% static "gazette/css/base.css" %}" type="text/css" />-->
+        {% endblock %}
+        {% block javascript %}
+            <!--<script src="{% static "gazette/js/jquery-1.7.2.min.js" %}" type="text/javascript"></script>-->
+            <!--<script src="{% static "gazette/bootstrap/js/bootstrap.min.js" %}" type="text/javascript"></script>-->
+        {% endblock %}
+        {% block extra_head %}{% endblock %}
+    </head>
+    <body>
+        <header class="navbar navbar-fixed-top">
+            <!--{% include "gazette/_navigation.html" %}-->
+        </header>
+        <div id="main" role="main">
+            <div class="container">
+                {% block content %}
+                {% endblock %}
+            </div>
+        </div>
+    </body>
+</html>

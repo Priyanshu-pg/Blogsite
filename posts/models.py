@@ -42,6 +42,27 @@ class Tag(models.Model):
     def get_absolute_url(self):
         return reverse('tag-archive', args=[self.tag_name])
 
+class SubscribedUsers(models.Model):
+    DAILY = 'D'
+    WEEKLY = 'W'
+    MONTHLY = 'M'
+    YEARLY = 'Y'
+    FREQUENCY_CHOICES = (
+        (DAILY, 'Daily'),
+        (WEEKLY, 'Weekly'),
+        (MONTHLY, 'Monthly'),
+        (YEARLY, 'Yearly'),
+    )
+    email = models.EmailField(max_length=100,
+                              blank=False,
+                              unique=True,
+                              error_messages={'unique': "This email has already been registered."})
+    frequency = models.CharField(
+        max_length=2,
+        choices=FREQUENCY_CHOICES,
+        default=DAILY,
+    )
+    tags_followed = models.ManyToManyField(Tag)
 
 class Post(models.Model):
     title = models.CharField(max_length=250)

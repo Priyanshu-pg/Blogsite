@@ -4,10 +4,5 @@ from django.contrib import admin
 
 from .models import Post, Tag
 
-# class PostAdmin(admin.ModelAdmin):
-    # list_display = ('title', 'create_time', 'update_time')
-    # list_display_links = ('title', 'create_time', 'update_time')
-    # prepopulated_fields = {"slug": ("title",)}
-
 admin.site.register(Post)
 admin.site.register(Tag)
