@@ -1,20 +1,20 @@
 from django.shortcuts import render
 from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.core.mail import send_mail
+from django.conf import settings
 from .models import Post, Tag
 from datetime import datetime
 from .forms import SubscribeUserForm
+from .utils import send_confirmation_mail
+from smtplib import SMTPException
 # Create your views here.
 
-def subscribe_user(request):
-    if request.method == 'POST':
-        form = SubscribeUserForm(request.POST)
-        if form.is_valid():
-            return HttpResponseRedirect(reverse('posts:home'));
-    else:
-        form = SubscribeUserForm()
-        return render(request, "_subscribe_form.html", {"form": form})
-
+def handle_form(request, form):
+    if form.is_valid():
+        try:
+            send_confirmation_mail(request, form.cleaned_data["email"])
+        except SMTPException:
+            return HttpResponseRedirect('home')
 
 def home(request):
     post_list = Post.objects.order_by('create_time')
@@ -42,9 +42,12 @@ def post_detail(request, year, month, slug):
     post = Post.objects.get(slug=slug)
     if request.method == 'POST':
         form = SubscribeUserForm(request.POST)
-        if form.is_valid():
-            return HttpResponseRedirect(reverse('home'));
+        subject = 'Thank you for registering to our site'
+        message = ' it  means a world to us '
+        email_from = settings.EMAIL_HOST_USER
+        recipient_list = ['receiver@gmail.com', ]
+        send_mail(subject, message, email_from, recipient_list)
+        # return handle_form(request, form)
     else:
         form = SubscribeUserForm()
-        # return render(request, "_subscribe_form.html", {"form": form})
     return render(request, "post_detail.html", {"post": post, "form": form})

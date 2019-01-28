@@ -162,3 +162,10 @@ TINYMCE_DEFAULT_CONFIG = {
     'menubar': True,
     'statusbar': True,
     }
+# TODO: Use G Suite SMTP relay
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_SSL = True
+EMAIL_PORT = 465
+EMAIL_HOST_USER = 'oldieandkiddo@gmail.com'
+EMAIL_HOST_PASSWORD = 'blogsite'

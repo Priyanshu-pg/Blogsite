@@ -1,0 +1,11 @@
+<form action="" method="post">
+    {% csrf_token %}
+    <p>Receive updates and latest news direct from our team. Simply enter your email below :</p>
+    <div class="input-group">
+      <span class="input-group-label">
+        <i class="fa fa-envelope"></i>
+      </span>
+      {{ form }}
+      <input type="submit" value="Sign up now">
+    </div>
+</form>
