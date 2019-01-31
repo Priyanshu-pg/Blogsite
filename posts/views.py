@@ -1,15 +1,13 @@
 from django.shortcuts import render
-from django.http import HttpResponseRedirect, HttpResponse
-from django.contrib import messages
+from django.http import HttpResponseRedirect
+from django.core.mail import send_mail
 from django.conf import settings
 from .models import Post, Tag
 from datetime import datetime
-from .forms import SubscribeUserForm, ConfirmSubscriberForm
+from .forms import SubscribeUserForm
 from .utils import send_confirmation_mail
 from smtplib import SMTPException
 # Create your views here.
-
-current_email=None
 
 def handle_form(request, form):
     if form.is_valid():
@@ -44,32 +42,12 @@ def post_detail(request, year, month, slug):
     post = Post.objects.get(slug=slug)
     if request.method == 'POST':
         form = SubscribeUserForm(request.POST)
-        if form.is_valid():
-            # try:
-            current_email=form.cleaned_data["email"]
-            send_confirmation_mail(request, current_email)
-            messages.success(request,'Email sent to confirm your email address.  Please check your email!')
-            # except Exception:
-            #     messages.error(request, 'Mail could not be sent')
+        subject = 'Thank you for registering to our site'
+        message = ' it  means a world to us '
+        email_from = settings.EMAIL_HOST_USER
+        recipient_list = ['receiver@gmail.com', ]
+        send_mail(subject, message, email_from, recipient_list)
+        # return handle_form(request, form)
     else:
         form = SubscribeUserForm()
     return render(request, "post_detail.html", {"post": post, "form": form})
-
-def resend_confirmation_mail(request):
-    try:
-        send_confirmation_mail(current_email)
-        messages.success(request, 'Email sent to confirm your email address.  Please check your email!')
-    except Exception:
-        messages.error(request, 'Mail could not be sent')
-    return HttpResponse(status=200)
-
-def confirm_subscriber(request, usermail):
-    if request.method == 'POST':
-        form = ConfirmSubscriberForm(request.POST)
-        if form.is_valid():
-            new_subscriber = form.save(commit=False)
-            new_subscriber.email = usermail
-            new_subscriber.save()
-    else:
-        form = ConfirmSubscriberForm()
-    return render(request, "_confirm_subscription.html", {"form": form})
