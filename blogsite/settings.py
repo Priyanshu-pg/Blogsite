@@ -80,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'blog_data',
         'USER': 'djangoapp',
-        'PASSWORD': 'Django123!@#',
+        'PASSWORD': os.environ.get("database_password"),
         'HOST': '',
         'PORT': '8001',
         # 'OPTIONS': {
@@ -164,8 +164,15 @@ TINYMCE_DEFAULT_CONFIG = {
     }
 # TODO: Use G Suite SMTP relay
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_SSL = True
 EMAIL_PORT = 465
-EMAIL_HOST_USER = 'oldieandkiddo@gmail.com'
-EMAIL_HOST_PASSWORD = 'blogsite'
+
+if os.environ['blogsite'] == 'dev':
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_HOST_USER = "oldieandkiddo@gmail.com"
+    EMAIL_HOST_PASSWORD = os.environ.get("email_host_password", '')
+else:
+    EMAIL_HOST = 'smtp.sendgrid.net'
+    # TODO: Create domain and then change these passwords and username
+    EMAIL_HOST_USER = 'oldieandkiddo@gmail.com'
+    EMAIL_HOST_PASSWORD = 'blogsite'
