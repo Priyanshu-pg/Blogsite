@@ -1,15 +1,18 @@
-from django.core.mail import send_mail
 from django.conf import settings
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.contrib import messages
+from django.urls import reverse
 
 def send_confirmation_mail(request, email):
-    subject = 'Confirmation mail'
-    message = 'Hi there, you have been subscribed'
+
+    redirect_link = request.build_absolute_uri(reverse('confirm-subscriber', args=[email]))
+    text_message = "Click "+redirect_link
+    html_message = render_to_string('template_confirmation_mail.html', {'link': redirect_link})
+
+    subject = 'Confirm Subscription'
     email_from = settings.EMAIL_HOST_USER
     recipient_list = [email]
-    send_mail(
-        subject,
-        message,
-        email_from,
-        recipient_list,
-        fail_silently=False
-    )
+    msg = EmailMultiAlternatives(subject, text_message, email_from, recipient_list)
+    msg.attach_alternative(html_message, "text/html")
+    msg.send()
