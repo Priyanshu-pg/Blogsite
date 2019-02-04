@@ -3,9 +3,10 @@ from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
 from django.contrib import messages
 from django.urls import reverse
+from django.http import HttpResponse
+import json
 
-def send_confirmation_mail(request, email):
-
+def send_mail_to(request, email):
     redirect_link = request.build_absolute_uri(reverse('confirm-subscriber', args=[email]))
     text_message = "Click "+redirect_link
     html_message = render_to_string('template_confirmation_mail.html', {'link': redirect_link})
@@ -15,4 +16,14 @@ def send_confirmation_mail(request, email):
     recipient_list = [email]
     msg = EmailMultiAlternatives(subject, text_message, email_from, recipient_list)
     msg.attach_alternative(html_message, "text/html")
-    msg.send()
+    if msg.send(fail_silently=False):
+        # send_mail_to(request, current_email)
+        return HttpResponse(
+            json.dumps({"successful": "this is happening"}),
+            content_type="application/json"
+        )
+    else:
+        return HttpResponse(
+            json.dumps({"unsuccessful": "this is not happening"}),
+            content_type="application/json"
+        )

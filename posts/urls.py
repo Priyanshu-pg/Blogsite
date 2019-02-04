@@ -2,7 +2,7 @@ from django.urls import include,path, re_path
 from posts import views, utils
 
 subscribe_patterns = [
-    path('resend_confirm_mail/', views.resend_confirmation_mail, name='resend-confirm-mail'),
+    path('send_confirm_mail/', views.send_confirmation_mail, name='send-confirm-mail'),
     path('confirm_subscriber/<str:usermail>', views.confirm_subscriber, name='confirm-subscriber')
 ]
 

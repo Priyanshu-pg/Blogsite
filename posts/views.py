@@ -5,9 +5,16 @@ from django.conf import settings
 from .models import Post, Tag
 from datetime import datetime
 from .forms import SubscribeUserForm, ConfirmSubscriberForm
-from .utils import send_confirmation_mail
+from .utils import send_mail_to
 from smtplib import SMTPException
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.core.mail import EmailMultiAlternatives
+from django.contrib import messages
+from django.urls import reverse
+import json
 # Create your views here.
+
 
 current_email=None
 
@@ -45,23 +52,15 @@ def post_detail(request, year, month, slug):
     if request.method == 'POST':
         form = SubscribeUserForm(request.POST)
         if form.is_valid():
-            # try:
-            current_email=form.cleaned_data["email"]
-            send_confirmation_mail(request, current_email)
-            messages.success(request,'Email sent to confirm your email address.  Please check your email!')
-            # except Exception:
-            #     messages.error(request, 'Mail could not be sent')
+            pass
     else:
         form = SubscribeUserForm()
     return render(request, "post_detail.html", {"post": post, "form": form})
 
-def resend_confirmation_mail(request):
-    try:
-        send_confirmation_mail(current_email)
-        messages.success(request, 'Email sent to confirm your email address.  Please check your email!')
-    except Exception:
-        messages.error(request, 'Mail could not be sent')
-    return HttpResponse(status=200)
+def send_confirmation_mail(request):
+    if request.method == 'POST':
+        current_email = request.POST.get('email')
+        return send_mail_to(request, current_email)
 
 def confirm_subscriber(request, usermail):
     if request.method == 'POST':

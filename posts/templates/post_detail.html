@@ -38,6 +38,35 @@
       });
     }
     </script>
+
+    <script>
+        $('#subscriber-form').on('submit', function(event){
+            event.preventDefault();
+            console.log("form submitted!")  // sanity check
+            send_confirm_mail();
+        });
+
+        function send_confirm_mail() {
+            console.log("AJAX is working!")
+            console.log($('#email-text').val())// sanity check
+            $.ajax({
+                url : "{% url 'send-confirm-mail' %}",
+                type : "POST",
+                data : { email : $('#email-text').val() },
+
+                success : function(json){
+                    console.log(json);
+                    console.log("sucessful!")
+                },
+
+                error : function(xhr, errmsg, err) {
+                    console.log(xhr.status + ": " + xhr.responseText);
+                }
+            });
+
+        };
+    </script>
+
 {% endblock %}
 
 {% block stylesheets %}
@@ -103,7 +132,20 @@
     <div class="subscribe">
         <button class="collapsible">Subscribe</button>
         <div class="simple-subscription-form">
-          {% include "_subscribe_form.html" %}
+
+          <form action="" method="post" id="subscriber-form">
+            {% csrf_token %}
+            <p>Receive updates and latest news direct from our team. Simply enter your email below :</p>
+            <div class="input-group">
+              <span class="input-group-label">
+                <i class="fa fa-envelope"></i>
+              </span>
+              {{ form }}
+              <input type="submit" value="Sign up now" id="submit-form">
+                <!--<a href="{% url 'send-confirm-mail' %}">Resend Mail</a>-->
+            </div>
+          </form>
+
         </div>
 </div>
 {% endblock %}
