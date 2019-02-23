@@ -44,6 +44,8 @@
             event.preventDefault();
             console.log("form submitted!")  // sanity check
             send_confirm_mail();
+            console.log($('#submit-button').attr('value'))
+            $('#submit-button').attr('value', 'Resend Mail')
         });
 
         function send_confirm_mail() {
@@ -55,8 +57,19 @@
                 data : { email : $('#email-text').val() },
 
                 success : function(json){
+                    if (json.success_msg){
+                    $('#success_msg').fadeIn().html(json.success_msg)
+                        setTimeout(function(){
+                            $('#success_msg').fadeOut();
+                        }, 2000);
+                    }
+                    if (json.error_msg){
+                    $('#error_msg').fadeIn().html(json.error_msg)
+                        setTimeout(function(){
+                            $('#success_msg').fadeOut();
+                        }, 2000);
+                    }
                     console.log(json);
-                    console.log("sucessful!")
                 },
 
                 error : function(xhr, errmsg, err) {
@@ -132,20 +145,15 @@
     <div class="subscribe">
         <button class="collapsible">Subscribe</button>
         <div class="simple-subscription-form">
-
           <form action="" method="post" id="subscriber-form">
             {% csrf_token %}
             <p>Receive updates and latest news direct from our team. Simply enter your email below :</p>
-            <div class="input-group">
-              <span class="input-group-label">
-                <i class="fa fa-envelope"></i>
-              </span>
-              {{ form }}
-              <input type="submit" value="Sign up now" id="submit-form">
-                <!--<a href="{% url 'send-confirm-mail' %}">Resend Mail</a>-->
-            </div>
+            {{ form }}
+            <input type="submit" id="submit-button" value="Sign up now">
+            <br/>
+            <span id="success_msg"></span>
+            <span id="error_msg"></span>
           </form>
-
         </div>
-</div>
+    </div>
 {% endblock %}

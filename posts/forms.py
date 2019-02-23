@@ -1,6 +1,7 @@
 from django import forms
 from .models import SubscribedUsers
 
+
 class SubscribeUserForm(forms.ModelForm):
     class Meta:
         model = SubscribedUsers
@@ -12,6 +13,7 @@ class SubscribeUserForm(forms.ModelForm):
                 'placeholder': 'Enter your email'
             }),
         }
+
 
 class ConfirmSubscriberForm(forms.ModelForm):
     class Meta:

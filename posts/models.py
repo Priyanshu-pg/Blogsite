@@ -4,9 +4,10 @@ from django.template.defaultfilters import slugify
 from tinymce import models as tinymce_models
 from django.core.validators import RegexValidator
 # Create your models here.
-
 # TODO: Add tags views upvotes downvotes stars author edited by
 # TODO: Add suggestion for clubbing similar tags
+
+
 class CaseInsensitiveFieldMixin:
     LOOKUP_CONVERSIONS = {
         'exact': 'iexact',
@@ -20,8 +21,10 @@ class CaseInsensitiveFieldMixin:
         converted = self.LOOKUP_CONVERSIONS.get(lookup_name, lookup_name)
         return super().get_lookup(converted)
 
+
 class CICharField(CaseInsensitiveFieldMixin, models.CharField):
     pass
+
 
 class Tag(models.Model):
     tag_name = CICharField(
@@ -42,6 +45,7 @@ class Tag(models.Model):
     def get_absolute_url(self):
         return reverse('tag-archive', args=[self.tag_name])
 
+
 class SubscribedUsers(models.Model):
     DAILY = 'D'
     WEEKLY = 'W'
@@ -56,13 +60,15 @@ class SubscribedUsers(models.Model):
     email = models.EmailField(max_length=100,
                               blank=False,
                               unique=True,
-                              error_messages={'unique': "This email has already been registered."})
+                              error_messages={'unique': "This email has already been registered."}
+                              )
     frequency = models.CharField(
-        max_length=2,
-        choices=FREQUENCY_CHOICES,
-        default=DAILY,
-    )
+                                max_length=2,
+                                choices=FREQUENCY_CHOICES,
+                                default=DAILY,
+                                )
     tags_followed = models.ManyToManyField(Tag)
+
 
 class Post(models.Model):
     title = models.CharField(max_length=250)
@@ -85,4 +91,3 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['create_time']
-

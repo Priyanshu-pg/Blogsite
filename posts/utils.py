@@ -19,11 +19,11 @@ def send_mail_to(request, email):
     if msg.send(fail_silently=False):
         # send_mail_to(request, current_email)
         return HttpResponse(
-            json.dumps({"successful": "this is happening"}),
+            json.dumps({"success_msg": "Email sent"}),
             content_type="application/json"
         )
     else:
         return HttpResponse(
-            json.dumps({"unsuccessful": "this is not happening"}),
+            json.dumps({"error_msg": "Email could not be sent"}),
             content_type="application/json"
         )
