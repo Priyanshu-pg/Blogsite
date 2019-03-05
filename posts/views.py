@@ -46,37 +46,42 @@ def post_detail(request, year, month, slug):
 
 
 def send_confirmation_mail(request):
-    max_resend_count = 5
-    resend_waiting_time = 10
     if request.method == 'POST':
+        max_resend_count = 5
+        resend_waiting_time = 10
         counter = request.session.get('counter', 0)
         counter += 1
         request.session['counter'] = counter
-        # print(request.session['counter'])
 
         if counter == max_resend_count:
             request.session['last_freeze'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
             return HttpResponse(
                 json.dumps({"error_msg": "You have tried {0} times. "
-                                         "Wait for {1} minutes before trying again.".format(max_resend_count, resend_waiting_time)}),
+                            "Wait for {1} minutes before trying again.".format(max_resend_count, resend_waiting_time)}),
                 content_type="application/json"
             )
+
         if counter > max_resend_count:
-            time_spent_in_seconds = (datetime.utcnow() - datetime.strptime(
-                                                    request.session.get('last_freeze', datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")),
-                                                    "%Y-%m-%d %H:%M:%S.%f")).seconds
+            time_spent_in_seconds = (datetime.utcnow() -
+                                     datetime.strptime(request.session.get('last_freeze',
+                                                                           datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")),
+                                                        "%Y-%m-%d %H:%M:%S.%f")
+                                     ).seconds
             if time_spent_in_seconds >= 60*resend_waiting_time:
                 request.session['counter'] = 0
-            minutes_left = max(0, math.ceil((60*resend_waiting_time - time_spent_in_seconds)/60))
-            return HttpResponse(
-                json.dumps({"error_msg": "You have tried more than {0} times. "
-                                         "Wait for {1} minutes before trying again".format(max_resend_count, minutes_left)}),
-                content_type="application/json"
-            )
+                counter = 0
+            else:
+                minutes_left = max(0, math.ceil((60*resend_waiting_time - time_spent_in_seconds)/60))
+                return HttpResponse(
+                    json.dumps({"error_msg": "You have tried more than {0} times. "
+                                "Wait for {1} minutes before trying again".format(max_resend_count, minutes_left)}),
+                    content_type="application/json"
+                )
 
         if counter <= max_resend_count:
             current_email = request.POST.get('email')
             return send_mail_to(request, current_email)
+
     else:
         form = SubscribeUserForm()
         return render(request, "_subscribe_form.html", {"form": form})
@@ -155,9 +160,12 @@ def send_confirmation_mail(request):
                 content_type="application/json"
             )
         if counter > 5:
-            time_spent_in_seconds = (datetime.utcnow() - datetime.strptime(
-                                                    request.session.get('last_freeze', datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")),
-                                                    "%Y-%m-%d %H:%M:%S.%f")).seconds
+            time_spent_in_seconds = (datetime.utcnow() -
+                                     datetime.strptime(request.session.get('last_freeze',
+                                                                           datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")),
+                                                       "%Y-%m-%d %H:%M:%S.%f"
+                                                       )
+                                     ).seconds
             if time_spent_in_seconds >= 600:
                 request.session['counter'] = 0
             minutes_left = max(0, math.ceil((600 - time_spent_in_seconds)/60))
