@@ -120,7 +120,7 @@ USE_I18N = True
 
 USE_L10N = True
 
-USE_TZ = False
+USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -175,4 +175,4 @@ else:
     EMAIL_HOST = 'smtp.sendgrid.net'
     # TODO: Create domain and then change these passwords and username
     EMAIL_HOST_USER = 'oldieandkiddo@gmail.com'
-    EMAIL_HOST_PASSWORD = 'blogsite'
+    EMAIL_HOST_PASSWORD = os.environ.get("email_host_password", '')

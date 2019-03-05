@@ -58,15 +58,15 @@
 
                 success : function(json){
                     if (json.success_msg){
-                    $('#success_msg').fadeIn().html(json.success_msg)
+                    $('#msg').fadeIn().html(json.success_msg)
                         setTimeout(function(){
-                            $('#success_msg').fadeOut();
+                            $('#msg').fadeOut();
                         }, 2000);
                     }
                     if (json.error_msg){
-                    $('#error_msg').fadeIn().html(json.error_msg)
+                    $('#msg').fadeIn().html(json.error_msg)
                         setTimeout(function(){
-                            $('#success_msg').fadeOut();
+                            $('#msg').fadeOut();
                         }, 2000);
                     }
                     console.log(json);
@@ -151,8 +151,7 @@
             {{ form }}
             <input type="submit" id="submit-button" value="Sign up now">
             <br/>
-            <span id="success_msg"></span>
-            <span id="error_msg"></span>
+            <span id="msg"></span>
           </form>
         </div>
     </div>
