@@ -17,9 +17,12 @@ from django.contrib import admin
 from django.urls import path, include
 from posts import views
 
+#TODO: Add custom 404 handler
 urlpatterns = [
     path('', include("posts.urls")),
+    path('404/', views.page_not_found_view, name='not-found'),
     path('admin/', admin.site.urls),
     path('tinymce/', include('tinymce.urls')),
-
 ]
+
+handler404 = 'posts.views.page_not_found_view'
