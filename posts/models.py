@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.template.defaultfilters import slugify
 from tinymce import models as tinymce_models
 from django.core.validators import RegexValidator
-from datetime import datetime
+import uuid
 import hashlib
 # Create your models here.
 # TODO: Add tags views upvotes downvotes stars author edited by
@@ -72,7 +72,7 @@ class Post(models.Model):
 
 
 def generate_hash(mail):
-    salt = datetime.now().timestamp().hex()
+    salt = uuid.uuid4().hex
     hashed_mail = hashlib.sha3_256(mail.encode('utf-8') + salt.encode('utf-8')).hexdigest()
     return hashed_mail
 
@@ -101,7 +101,8 @@ class SubscribedUsers(models.Model):
     )
     email = models.EmailField(max_length=100,
                               blank=False,
-                              unique=True)
+                              unique=True,
+                              error_messages={'unique': "You are already subscribed"})
     frequency = models.CharField(
                                 max_length=2,
                                 choices=FREQUENCY_CHOICES,

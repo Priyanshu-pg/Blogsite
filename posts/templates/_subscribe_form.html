@@ -1,12 +1,42 @@
-<form action="" method="post">
+{% include "_subscribe_form.html" %}
+<form action="" method="post" id="post-form">
     {% csrf_token %}
     <p>Receive updates and latest news direct from our team. Simply enter your email below :</p>
     <div class="input-group">
       <span class="input-group-label">
         <i class="fa fa-envelope"></i>
       </span>
-      {{ form }}
+    {{ form }}
       <input type="submit" value="Sign up now">
-        <!--<a href="{% url 'resend-confirm-mail' %}">Resend Mail</a>-->
+
     </div>
 </form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"> </script>
+<script>
+   $("#subscriber-form").on('submit', function(event){
+        event.preventDefault();
+        console.log("form submitted!")  // sanity check
+        send_confirm_mail();
+    });
+
+   function send_confirm_mail() {
+    console.log("AJAX is working!")
+    console.log($('#email-text').val()) // sanity check
+    $.ajax({
+        url : "{% url 'send-confirm-mail' %}",
+        type : "POST",
+        data : { email : $('#email-text').val() },
+
+        success : function(json){
+            $('#success-msg').text(json.success_msg).show()
+            console.log(json);
+            console.log("sucessful!")
+        },
+
+        error : function(xhr, errmsg, err) {
+            console.log(xhr.status + ": " + xhr.responseText);
+        }
+    });
+   };
+</script>

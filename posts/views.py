@@ -1,15 +1,17 @@
 from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.shortcuts import render
-from posts.models import Post
+from posts.models import Post, Tag
 from posts.models import UserMailIdMap
+from posts.models import SubscribedUsers
 from datetime import datetime
 from posts.forms import SubscribeUserForm, ConfirmSubscriberForm
 from posts.utils import send_mail_to
 from django.http import HttpResponse
+from django.db.utils import IntegrityError
+from django.contrib import messages
 import json
 import math
-
 
 
 def home(request):
@@ -106,11 +108,20 @@ def confirm_subscriber(request, usermail):
             new_subscriber = form.save(commit=False)
             try:
                 user_mail_obj = UserMailIdMap.objects.get(email_hash=usermail)
+                new_subscriber.email = user_mail_obj.email
+                new_subscriber.save()
+                form.save_m2m()  # saving many-to-many relationship as side effect of commit=false
+                messages.success(request, 'You have been successfully subscribed')
             except UserMailIdMap.DoesNotExist:
                 raise Http404("No user email is registered. Please register again")
-            new_subscriber.email = user_mail_obj.email
-            new_subscriber.save()
-            form.save_m2m()  # saving many-to-many relationship as side effect of commit=false
+            except IntegrityError:
+                tags_followed = Tag.objects.filter(tag_name__in = form.cleaned_data["tags_followed"])
+                old_subscriber = SubscribedUsers.objects.get(email=user_mail_obj.email)
+                old_subscriber.frequency = form.cleaned_data["frequency"]
+                old_subscriber.tags_followed.set(tags_followed)
+                old_subscriber.save()
+                messages.success(request, 'Your subscription plan has been updated')
+
     else:
         form = ConfirmSubscriberForm()
     return render(request, "_confirm_subscription.html", {"form": form})
