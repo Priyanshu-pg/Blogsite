@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from django.http import Http404
 from django.shortcuts import render
 from posts.models import Post
+from posts.models import UserMailIdMap
 from datetime import datetime
 from posts.forms import SubscribeUserForm, ConfirmSubscriberForm
 from posts.utils import send_mail_to
@@ -10,7 +11,7 @@ import json
 import math
 
 
-#TODO: Handle 404 page problems
+
 def home(request):
     post_list = Post.objects.order_by('create_time')
     if len(post_list) == 0:
@@ -86,19 +87,28 @@ def send_confirmation_mail(request):
 
         if counter <= max_resend_count:
             current_email = request.POST.get('email')
-            return send_mail_to(request, current_email)
+            try:
+                user_mail_id_map = UserMailIdMap.objects.get(email=current_email)
+            except UserMailIdMap.DoesNotExist:
+                user_mail_id_map = UserMailIdMap(email=current_email)
+                user_mail_id_map.save()
+            return send_mail_to(request, user_mail_id_map.email, user_mail_id_map.email_hash)
 
     else:
         form = SubscribeUserForm()
         return render(request, "_subscribe_form.html", {"form": form})
 
 
-def confirm_subscriber(request, user_mail):
+def confirm_subscriber(request, usermail):
     if request.method == 'POST':
         form = ConfirmSubscriberForm(request.POST)
         if form.is_valid():
             new_subscriber = form.save(commit=False)
-            new_subscriber.email = user_mail
+            try:
+                user_mail_obj = UserMailIdMap.objects.get(email_hash=usermail)
+            except UserMailIdMap.DoesNotExist:
+                raise Http404("No user email is registered. Please register again")
+            new_subscriber.email = user_mail_obj.email
             new_subscriber.save()
             form.save_m2m()  # saving many-to-many relationship as side effect of commit=false
     else:

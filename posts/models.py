@@ -3,6 +3,8 @@ from django.urls import reverse
 from django.template.defaultfilters import slugify
 from tinymce import models as tinymce_models
 from django.core.validators import RegexValidator
+from datetime import datetime
+import hashlib
 # Create your models here.
 # TODO: Add tags views upvotes downvotes stars author edited by
 # TODO: Add suggestion for clubbing similar tags
@@ -46,30 +48,6 @@ class Tag(models.Model):
         return reverse('tag-archive', args=[self.tag_name])
 
 
-class SubscribedUsers(models.Model):
-    DAILY = 'D'
-    WEEKLY = 'W'
-    MONTHLY = 'M'
-    YEARLY = 'Y'
-    FREQUENCY_CHOICES = (
-        (DAILY, 'Daily'),
-        (WEEKLY, 'Weekly'),
-        (MONTHLY, 'Monthly'),
-        (YEARLY, 'Yearly'),
-    )
-    email = models.EmailField(max_length=100,
-                              blank=False,
-                              unique=True,
-                              error_messages={'unique': "This email has already been registered."}
-                              )
-    frequency = models.CharField(
-                                max_length=2,
-                                choices=FREQUENCY_CHOICES,
-                                default=DAILY,
-                                )
-    tags_followed = models.ManyToManyField(Tag)
-
-
 class Post(models.Model):
     title = models.CharField(max_length=250)
     slug = models.SlugField(max_length=100, unique=True, default="slug")
@@ -91,3 +69,42 @@ class Post(models.Model):
 
     class Meta:
         ordering = ['create_time']
+
+
+def generate_hash(mail):
+    salt = datetime.now().timestamp().hex()
+    hashed_mail = hashlib.sha3_256(mail.encode('utf-8') + salt.encode('utf-8')).hexdigest()
+    return hashed_mail
+
+
+class UserMailIdMap(models.Model):
+    email = models.EmailField(max_length=100,
+                              blank=False,
+                              unique=True)
+    email_hash = models.CharField(max_length=250)
+
+    def save(self, *args, **kwargs):
+        self.email_hash = generate_hash(self.email)
+        super(UserMailIdMap, self).save(*args, **kwargs)
+
+
+class SubscribedUsers(models.Model):
+    DAILY = 'D'
+    WEEKLY = 'W'
+    MONTHLY = 'M'
+    YEARLY = 'Y'
+    FREQUENCY_CHOICES = (
+        (DAILY, 'Daily'),
+        (WEEKLY, 'Weekly'),
+        (MONTHLY, 'Monthly'),
+        (YEARLY, 'Yearly'),
+    )
+    email = models.EmailField(max_length=100,
+                              blank=False,
+                              unique=True)
+    frequency = models.CharField(
+                                max_length=2,
+                                choices=FREQUENCY_CHOICES,
+                                default=DAILY,
+                                )
+    tags_followed = models.ManyToManyField(Tag)
