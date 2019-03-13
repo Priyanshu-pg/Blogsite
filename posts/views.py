@@ -5,7 +5,7 @@ from posts.models import Post, Tag
 from posts.models import UserMailIdMap
 from posts.models import SubscribedUsers
 from datetime import datetime
-from posts.forms import SubscribeUserForm, ConfirmSubscriberForm
+from posts.forms import SubscribeUserForm, SubscriptionChoiceForm, UnsubscribeForm
 from posts.utils import send_mail_to
 from django.http import HttpResponse
 from django.db.utils import IntegrityError
@@ -54,33 +54,53 @@ def post_detail(request, year, month, slug):
     return render(request, "post_detail.html", {"post": post, "form": form})
 
 
+def freeze_submission(request, max_resend_count, resend_waiting_time):
+    request.session['last_freeze'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
+    return HttpResponse(
+        json.dumps({"error_msg": "You have tried {0} times. "
+                                 "Wait for {1} minutes before trying again.".format(max_resend_count,
+                                                                                    resend_waiting_time)}),
+        content_type="application/json"
+    )
+
+
+def calc_time_spent_in_seconds(request):
+    last_freeze_time = request.session.get('last_freeze', datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f"))
+    time_spent_in_seconds = (datetime.utcnow() -
+                             datetime.strptime(last_freeze_time, "%Y-%m-%d %H:%M:%S.%f")
+                             ).seconds
+    return time_spent_in_seconds
+
+
+def get_user_mail_and_hash(request):
+    current_email = request.POST.get('email')
+    try:
+        user_mail_id_map = UserMailIdMap.objects.get(email=current_email)
+    except UserMailIdMap.DoesNotExist:
+        user_mail_id_map = UserMailIdMap(email=current_email)
+        user_mail_id_map.save()
+    return user_mail_id_map.email, user_mail_id_map.email_hash
+
+
 def send_confirmation_mail(request):
     if request.method == 'POST':
         max_resend_count = 5
         resend_waiting_time = 10
+
         counter = request.session.get('counter', 0)
         counter += 1
         request.session['counter'] = counter
 
         if counter == max_resend_count:
-            request.session['last_freeze'] = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")
-            return HttpResponse(
-                json.dumps({"error_msg": "You have tried {0} times. "
-                            "Wait for {1} minutes before trying again.".format(max_resend_count, resend_waiting_time)}),
-                content_type="application/json"
-            )
+            return freeze_submission(request)
 
         if counter > max_resend_count:
-            time_spent_in_seconds = (datetime.utcnow() -
-                                     datetime.strptime(request.session.get('last_freeze',
-                                                                           datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S.%f")),
-                                                        "%Y-%m-%d %H:%M:%S.%f")
-                                     ).seconds
-            if time_spent_in_seconds >= 60*resend_waiting_time:
+            time_left_to_unfreeze = 60*resend_waiting_time - calc_time_spent_in_seconds(request)
+            if time_left_to_unfreeze <= 0:
                 request.session['counter'] = 0
                 counter = 0
             else:
-                minutes_left = max(0, math.ceil((60*resend_waiting_time - time_spent_in_seconds)/60))
+                minutes_left = max(0, math.ceil(time_left_to_unfreeze/60))
                 return HttpResponse(
                     json.dumps({"error_msg": "You have tried more than {0} times. "
                                 "Wait for {1} minutes before trying again".format(max_resend_count, minutes_left)}),
@@ -88,42 +108,88 @@ def send_confirmation_mail(request):
                 )
 
         if counter <= max_resend_count:
-            current_email = request.POST.get('email')
-            try:
-                user_mail_id_map = UserMailIdMap.objects.get(email=current_email)
-            except UserMailIdMap.DoesNotExist:
-                user_mail_id_map = UserMailIdMap(email=current_email)
-                user_mail_id_map.save()
-            return send_mail_to(request, user_mail_id_map.email, user_mail_id_map.email_hash)
+            current_email, current_email_hash = get_user_mail_and_hash(request)
+            return send_mail_to(request, current_email, current_email_hash)
 
     else:
         form = SubscribeUserForm()
         return render(request, "_subscribe_form.html", {"form": form})
 
 
-def confirm_subscriber(request, usermail):
+def get_user_mail_obj(user_mail_hash):
+    try:
+        user_mail_obj = UserMailIdMap.objects.get(email_hash=user_mail_hash)
+        return user_mail_obj
+    except UserMailIdMap.DoesNotExist:
+        raise Http404("No user email is registered. Please register again")
+
+
+def get_existing_subscription(user_mail):
+    try:
+        old_subscriber = SubscribedUsers.objects.get(email=user_mail)
+        return old_subscriber
+    except SubscribedUsers.DoesNotExist:
+        return None
+
+
+def update_subscription(request, subscriber, form):
+    tags_followed = Tag.objects.filter(tag_name__in=form.cleaned_data["tags_followed"])
+    subscriber.frequency = form.cleaned_data["frequency"]
+    subscriber.tags_followed.set(tags_followed)
+    subscriber.save()
+    messages.success(request, 'Your subscription plan has been updated')
+
+
+def unsubscribe(request, user_mail_hash):
     if request.method == 'POST':
-        form = ConfirmSubscriberForm(request.POST)
+        form = UnsubscribeForm(request.POST)
         if form.is_valid():
-            new_subscriber = form.save(commit=False)
-            try:
-                user_mail_obj = UserMailIdMap.objects.get(email_hash=usermail)
+            if 'yes' in request.POST:
+                user_mail_obj = get_user_mail_obj(user_mail_hash)
+                subscriber = get_existing_subscription(user_mail_obj.email)
+                if subscriber is None:
+                    messages.success(request, 'You have not subscribed yet.')
+                else:
+                    subscriber.delete()
+                    messages.success(request, "Unsubscribed")
+            if 'no' in request.POST:
+                messages.success(request, "Still subscribed")
+    else:
+        form = UnsubscribeForm()
+    return render(request, "unsubscribe.html", {"form": form})
+
+
+def modify_subscription(request, user_mail_hash):
+    if request.method == 'POST':
+        form = SubscriptionChoiceForm(request.POST)
+        if form.is_valid():
+            user_mail_obj = get_user_mail_obj(user_mail_hash)
+            subscriber = get_existing_subscription(user_mail_obj.email)
+            if subscriber is None:
+                messages.success(request, 'You have not subscribed yet.')
+            else:
+                update_subscription(request, subscriber, form)
+    else:
+        form = SubscriptionChoiceForm()
+    return render(request, "_confirm_subscription.html", {"form": form})
+
+
+def confirm_subscriber(request, user_mail_hash):
+    if request.method == 'POST':
+        form = SubscriptionChoiceForm(request.POST)
+        if form.is_valid():
+            user_mail_obj = get_user_mail_obj(user_mail_hash)
+            subscriber = get_existing_subscription(user_mail_obj.email)
+            if subscriber is None:
+                new_subscriber = form.save(commit=False)
                 new_subscriber.email = user_mail_obj.email
                 new_subscriber.save()
                 form.save_m2m()  # saving many-to-many relationship as side effect of commit=false
                 messages.success(request, 'You have been successfully subscribed')
-            except UserMailIdMap.DoesNotExist:
-                raise Http404("No user email is registered. Please register again")
-            except IntegrityError:
-                tags_followed = Tag.objects.filter(tag_name__in = form.cleaned_data["tags_followed"])
-                old_subscriber = SubscribedUsers.objects.get(email=user_mail_obj.email)
-                old_subscriber.frequency = form.cleaned_data["frequency"]
-                old_subscriber.tags_followed.set(tags_followed)
-                old_subscriber.save()
-                messages.success(request, 'Your subscription plan has been updated')
-
+            else:
+                update_subscription(request, subscriber, form)
     else:
-        form = ConfirmSubscriberForm()
+        form = SubscriptionChoiceForm()
     return render(request, "_confirm_subscription.html", {"form": form})
 
 

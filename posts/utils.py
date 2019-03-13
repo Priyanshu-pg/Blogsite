@@ -8,9 +8,13 @@ import json
 
 
 def send_mail_to(request, email, hash_email):
-    redirect_link = request.build_absolute_uri(reverse('confirm-subscriber', args=[hash_email]))
-    text_message = "Click "+redirect_link
-    html_message = render_to_string('template_confirmation_mail.html', {'link': redirect_link})
+    confirmation_link = request.build_absolute_uri(reverse('confirm-subscriber', args=[hash_email]))
+    modify_link = request.build_absolute_uri(reverse('modify-subscription', args=[hash_email]))
+    unsubscribe_link = request.build_absolute_uri(reverse('unsubscribe', args=[hash_email]))
+    text_message = "Click "+confirmation_link
+    html_message = render_to_string('template_confirmation_mail.html', {'confirmation_link': confirmation_link,
+                                                                        'modify_link': modify_link,
+                                                                        'unsubscribe_link': unsubscribe_link})
 
     subject = 'Confirm Subscription'
     email_from = settings.EMAIL_HOST_USER

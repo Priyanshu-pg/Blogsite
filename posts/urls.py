@@ -3,7 +3,9 @@ from posts import views, utils
 
 subscribe_patterns = [
     path('send_confirm_mail/', views.send_confirmation_mail, name='send-confirm-mail'),
-    path('confirm_subscriber/<str:usermail>', views.confirm_subscriber, name='confirm-subscriber')
+    path('confirm_subscriber/<str:user_mail_hash>', views.confirm_subscriber, name='confirm-subscriber'),
+    path('modify_subscription/<str:user_mail_hash>', views.modify_subscription, name='modify-subscription'),
+    path('unsubscribe/<str:user_mail_hash>', views.unsubscribe, name='unsubscribe')
 ]
 
 urlpatterns = [

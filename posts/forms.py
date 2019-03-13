@@ -15,7 +15,16 @@ class SubscribeUserForm(forms.ModelForm):
         }
 
 
-class ConfirmSubscriberForm(forms.ModelForm):
+class SubscriptionChoiceForm(forms.ModelForm):
     class Meta:
         model = SubscribedUsers
         fields = ['frequency', 'tags_followed']
+
+
+class UnsubscribeForm(forms.ModelForm):
+    class Meta:
+        model = SubscribedUsers
+        fields = []
+
+
+
