@@ -1,0 +1,15 @@
+<form action="" method="post">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    {% for field in form %}
+      <td>
+       <table>
+        <tr><td>{{ field.label }}</td></tr>
+        <tr><td>{{ field }}</td></tr>
+        <tr><td>{{ field.errors }}</td></tr>
+       </table>
+      </td>
+    {% endfor %}
+
+    <input type="submit" value="Register">
+</form>

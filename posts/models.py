@@ -109,3 +109,19 @@ class SubscribedUsers(models.Model):
                                 default=DAILY,
                                 )
     tags_followed = models.ManyToManyField(Tag)
+
+
+alpha = RegexValidator(r'^[a-zA-Z]*$', 'Only alphabets are allowed.')
+
+
+class Users(models.Model):
+    first_name = models.CharField(max_length=100, validators=[alpha])
+    last_name = models.CharField(max_length=100, validators=[alpha])
+    email = models.EmailField(max_length=200,
+                              blank=False,
+                              unique=True,
+                              error_messages={'unique': "This email has already been used"})
+    password = models.CharField(max_length=500)
+    liked_posts = models.ManyToManyField(Post, related_name="liked_posts")
+    saved_posts = models.ManyToManyField(Post, related_name="saved_posts")
+

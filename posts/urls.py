@@ -8,9 +8,15 @@ subscribe_patterns = [
     path('unsubscribe/<str:user_mail_hash>', views.unsubscribe, name='unsubscribe')
 ]
 
+user_patterns = [
+    path('register/', views.register_user, name='register-user'),
+    path('login/', views.login_user, name='login-user'),
+]
+
 urlpatterns = [
     path('', views.home, name='home'),
     path('subscribe/', include(subscribe_patterns)),
+    path('user/', include(user_patterns)),
     re_path(r'^(?P<year>[0-9]{4})/$', views.year_archive, name='year-archive'),
     re_path(r'^(?P<year>[0-9]{4})/(?P<month>[0-9]{2})/$', views.month_archive, name='month-archive'),
     re_path(r'^tags/(?P<tag>[-\w]+)/$', views.tag_archive, name='tag-archive'),

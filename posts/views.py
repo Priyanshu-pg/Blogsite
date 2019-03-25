@@ -5,13 +5,17 @@ from posts.models import Post, Tag
 from posts.models import UserMailIdMap
 from posts.models import SubscribedUsers
 from datetime import datetime
-from posts.forms import SubscribeUserForm, SubscriptionChoiceForm, UnsubscribeForm
+from posts.forms import *
 from posts.utils import send_mail_to
 from django.http import HttpResponse
 from django.db.utils import IntegrityError
 from django.contrib import messages
 import json
 import math
+from django.contrib.auth.hashers import make_password, check_password
+
+
+#TODO: Check time zone issues with mysql table
 
 
 def home(request):
@@ -198,3 +202,32 @@ def page_not_found_view(request, exception):
     response.status_code = 404
     return response
 
+
+def register_user(request):
+    if request.method == 'POST':
+        form = RegisterForm(request.POST)
+        if form.is_valid():
+            user = form.save(commit=False)
+            password = form.cleaned_data['password']
+            user.password = make_password(password, None, 'md5')
+            user.save()
+    else:
+        form = RegisterForm()
+    return render(request, "register_user_form.html", {"form": form})
+
+
+def login_user(request):
+    if request.method == 'POST':
+        form = LoginForm(request.POST)
+        if form.is_valid():
+            email = form.cleaned_data['email']
+            password = form.cleaned_data['password']
+            user = Users.objects.get(email=email)
+            encoded = user.password
+            if check_password(password, encoded):
+                messages.success(request, "You have been logged in successfully")
+            else:
+                messages.error(request, "Incorrect password")
+    else:
+        form = LoginForm()
+    return render(request, "login_user_form.html", {"form": form})
